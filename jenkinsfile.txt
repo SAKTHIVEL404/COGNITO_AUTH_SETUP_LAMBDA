@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('your-aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('your-aws-secret-access-key')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Install SAM CLI') {
+            steps {
+                sh 'pip install aws-sam-cli'
+            }
+        }
+        stage('Build and Package') {
+            steps {
+                sh 'sam build'
+                sh 'sam package --s3-bucket your-s3-bucket-name --output-template-file packaged.yaml'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'sam deploy --template-file packaged.yaml --stack-name your-stack-name --capabilities CAPABILITY_IAM'
+            }
+        }
+    }
+}
