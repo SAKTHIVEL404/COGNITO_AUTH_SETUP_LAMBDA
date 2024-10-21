@@ -27,7 +27,7 @@ Create a New Lambda Function:
 
 **Example Lambda function (Node.js):
 javascript**
-Copy code
+**Copy code
 exports.handler = async (event) => {
     const response = {
         statusCode: 200,
@@ -35,7 +35,7 @@ exports.handler = async (event) => {
     };
     return response;
 };
-Save the function.
+Save the function.**
 
 2)Test the Lambda Function:
 3)Click Test and configure a test event.
@@ -59,82 +59,84 @@ Select the region and enter the Lambda function name (MyLambdaFunction).
 12)Click Save and allow API Gateway to invoke the Lambda function.
 Enable CORS (Optional):
 
-Deploy the API:
+**IV)Deploy the API:**
 1)Click Actions > Deploy API.
 2)Create a new stage (e.g., dev) and click Deploy.
 Copy the Invoke URL of the API.
 
-**3. Set Up Authorization**
-Option 1: Using Lambda Authorizer
-Create a Lambda Authorizer:
+**Step-by-Step Instructions: Setting up Cognito Authorizer**
+1) Create a Cognito User Pool
+Go to AWS Management Console and search for Cognito.
+2)Click on “Create a User Pool”.
 
-In Lambda, create a new function (e.g., MyAuthFunction).
-Write a function to validate the token and return an IAM policy:
-javascript
-Copy code
-exports.handler = async (event) => {
-    const token = event.authorizationToken;
-    if (token === "valid-token") {
-        return generatePolicy('user', 'Allow', event.methodArn);
-    } else {
-        return generatePolicy('user', 'Deny', event.methodArn);
-    }
-};
+**Define Pool Settings:**
 
-const generatePolicy = (principalId, effect, resource) => {
-    return {
-        principalId,
-        policyDocument: {
-            Version: '2012-10-17',
-            Statement: [{
-                Action: 'execute-api:Invoke',
-                Effect: effect,
-                Resource: resource,
-            }],
-        },
-    };
-};
-Add Lambda Authorizer in API Gateway:
+1)Provide a name for the User Pool (e.g., MyUserPool).
+2)Click Step through settings.
+3)Configure Sign-in Options:
+4)Choose how users will sign in (e.g., email, phone number).
+5)Enable email or phone number as a sign-in option.
+Password Policy:
 
-Go to API Gateway > Your API > Authorizers.
-Click Create New Authorizer.
-Set the name (MyLambdaAuth), select Lambda as the authorizer type.
-Select the Lambda function (MyAuthFunction).
-Set Token Source as Authorization header.
-Attach Authorizer to API Method:
+Configure the password policy as per your requirements (e.g., length, complexity).
+MFA and Verification:
 
-In Resources, select the method (e.g., GET /hello).
-In Method Request, select Authorization and choose MyLambdaAuth.
-Option 2: Using Cognito User Pool Authorizer
-Create a Cognito User Pool:
+Choose whether you want to enable Multi-Factor Authentication (optional).
+Configure verification methods (SMS or email).
 
-Go to Cognito in AWS.
-Create a new User Pool and configure the basic settings.
-Under App Clients, create a new app client (this will generate a Client ID).
-Add Cognito Authorizer in API Gateway:
+**Attributes and Permissions:**
 
-Go to API Gateway > Your API > Authorizers.
-Click Create New Authorizer.
-Set the name (MyCognitoAuth), select Cognito as the authorizer type.
-Choose your Cognito User Pool.
-Optionally, specify the App Client ID for validation.
-Attach Authorizer to API Method:
+Define required attributes for the users (e.g., email, phone, etc.).
+Create User Pool:
 
-In Resources, select the method (e.g., GET /hello).
-In Method Request, select Authorization and choose MyCognitoAuth.
-4. Test the API with Authorization
-Lambda Authorizer:
+Review the settings and click Create Pool.
 
-Make a request to the API using a valid token in the Authorization header.
-sql
-Copy code
-curl -X GET https://<api-id>.execute-api.<region>.amazonaws.com/dev/hello \
--H "Authorization: valid-token"
-Cognito User Pool:
+**V) Set Up an App Client**
+1)After the User Pool is created, create an app client that your API Gateway will use.
 
-Authenticate a user via Cognito (get an ID token or access token).
-Call the API with the token:
-php
-Copy code
-curl -X GET https://<api-id>.execute-api.<region>.amazonaws.com/dev/hello \
--H "Authorization: <JWT>"
+2)Go to App Clients.
+3)Click Add an App Client.
+4)Provide a name (e.g., MyAppClient).
+5)Disable Generate Client Secret.
+6)Click Create App Client.
+7)Capture the App Client ID. This will be needed when setting up the authorizer in API Gateway.
+8) Go to Domain Name under App Integration.
+**Create a Domain:**
+2)Set a custom domain for Cognito's hosted UI (if you are using Cognito for login pages).
+For example, myapp.auth.ap-south-1.amazoncognito.com.
+3) Set Up Cognito Authorizer in API Gateway
+Go to API Gateway in the AWS Management Console.
+
+**Select your API**
+
+In the API Gateway dashboard, go to the Authorizers section and click Create New Authorizer.
+
+**Configure the Cognito Authorizer**
+Name: Give your authorizer a name (e.g., MyCognitoAuth).
+Type: Choose Cognito.
+Cognito User Pool: Select the User Pool you created earlier (MyUserPool).
+App Client ID: (Optional) Enter the App Client ID from your App Client (from step 2).
+Click Create to finalize the authorizer.
+
+**VI) Attach Cognito Authorizer to an API Method**
+In API Gateway, go to Resources under your API.
+Select the method you want to secure (e.g., GET /users).
+Click on Method Request.
+Under Authorization, select the Cognito Authorizer (MyCognitoAuth) you created.
+Save the configuration.
+
+**VII) Deploy the API**
+Once you’ve attached the authorizer, go to Actions and select Deploy API.
+Choose a Stage (or create a new one, like prod or dev).
+Click Deploy.
+You’ll get an Invoke URL for accessing the API.
+**VIII) Test the API with Cognito Authorization**
+Authenticate a User with Cognito:
+1) We have a way to get a access token for authenticate the api gateway for a user login
+
+     command for cloudshell to get a access token for a API gateway
+   aws cognito-idp admin-initiate-auth \
+  --user-pool-id <USER_POOL_ID> \
+  --client-id <APP_CLIENT_ID> \
+  --auth-flow ADMIN_NO_SRP_AUTH \
+  --auth-parameters USERNAME=<username>,PASSWORD=<password
