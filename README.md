@@ -140,3 +140,8 @@ Authenticate a User with Cognito:
   --client-id <APP_CLIENT_ID> \
   --auth-flow ADMIN_NO_SRP_AUTH \
   --auth-parameters USERNAME=<username>,PASSWORD=<password
+
+IX) Getting access token using postman
+1)open the postman api testing tool 
+2)go to the header and give key coloum as Authorixation 
+3)send the key the access id will came after press send thyen fill the value column with access key then we will gwt the our lambda code output
